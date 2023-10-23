@@ -1,4 +1,4 @@
-Block Ports on Mac Using PF Daemon 
+# Block Ports on Mac Using PF Daemon. This creates a daemon that will persist reboot. Credit to ivanmv and his medium post which is the foundaiton for this process
 
 # All variables in <> need to be supplied by the user
 
