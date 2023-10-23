@@ -1,0 +1,61 @@
+Block Ports on Mac Using PF Daemon 
+
+# All variables in <> need to be supplied by the user
+
+# Create Anchors File
+sudo touch /etc/pf.anchors/<org.org>
+
+# Contents:
+#Network interfaces: en depends on Network Interface you are blocking on.
+You can use networksetup -listallhardwareports to find this value
+ether=<en>
+# Don't filter on local loopback
+set skip on lo0
+# Add more of the block lines to block additional ports. This setup blocks all traffic on these ports
+block on $ether proto tcp from 0.0.0.0/0 to port <#>
+block on $ether proto tcp from 0.0.0.0/0 to port <#>
+
+# Create Global Launch Daemon Plist 
+sudo touch /Library/LaunchDaemons/<org>.pfctl.plist
+
+# Contents: 
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer/DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+        <string><org>.pfctl.plist</string>
+    <key>Program</key>
+        <string>/usr/local/bin/firewall.sh</string>
+    <key>RunAtLoad</key>
+        <true/>
+    <key>LaunchOnlyOnce</key>
+        <true/>
+    <key>StandardOutPath</key>
+        <string>/Users/<shortname>/pfctl_log.log</string>
+    <key>StandardErrorPath</key>
+        <string>/Users/<shortname>/pfctl_error.log</string>
+</dict>
+</plist>
+
+# Create Firewall Script
+sudo touch /usr/local/bin/firewall.sh
+    
+# Contents:
+#!/bin/bash
+/bin/sleep 5
+/usr/sbin/ipconfig waitall
+/sbin/pfctl -E -f /etc/pf.<org>.conf
+
+# Create Config File
+sudo touch /etc/pf.<org>.conf 
+
+# Contents:
+anchor "<org.org>.pf"
+load anchor "<org.org>.pf" from
+"/etc/pf.anchors/<org.org>"
+
+# Reboot Computer
+1. Use sudo pfctl -E -f /etc/pf.anchors/<org.org> to test manually before restart 
+2. Use sudo pfctl -s info | grep Status to test status after restart 
