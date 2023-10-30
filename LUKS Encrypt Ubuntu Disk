@@ -1,0 +1,28 @@
+#Create a LUKS-Encrypted Volume in Ubuntu 22.04 w/Key
+
+# Create strong LUKS key
+openssl genrsa -out /root/luks.key 4096
+chmod 400 /root/luks.key
+
+# Fill random data to the device (optional but strongly encouraged) 
+shred -v --iterations=1 /dev/xvdb 
+
+# Format device
+echo "YES" | cryptsetup luksFormat /dev/xvdb --key-file /root/luks.key 
+
+# Open device
+cryptsetup luksOpen /dev/xvdb data1 --key-file /root/luks.key 
+
+# Format device
+mkfs.ext4 /dev/mapper/data1
+
+# Mount
+mount /dev/mapper/data1 /data1
+
+# Persist at boot
+Add to /etc/crypttab: data1 /dev/xvdb /root/luks.key luks
+Add to /etc/fstab: /dev/mapper/data1       /data1  ext4    defaults 1 2
+
+# Verify
+cryptsetup -v isLuks /dev/xvdb
+df -h /data1
